@@ -39,7 +39,7 @@ class JarViewModel : ViewModel() {
     _filerListStringData.value = filteredData
   }
 
-  fun filterData(query: String): List<ComputerItem> {
+ private fun filterData(query: String): List<ComputerItem> {
     return _listStringData.filter {
       it.name.contains(query)
     }.toList()
