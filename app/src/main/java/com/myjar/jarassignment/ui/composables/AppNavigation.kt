@@ -7,16 +7,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -28,78 +34,105 @@ import com.myjar.jarassignment.ui.vm.JarViewModel
 
 @Composable
 fun AppNavigation(
-    modifier: Modifier = Modifier,
-    viewModel: JarViewModel,
+  modifier: Modifier = Modifier,
+  viewModel: JarViewModel,
 ) {
-    val navController = rememberNavController()
-    val navigate = remember { mutableStateOf<String>("") }
+  val navController = rememberNavController()
+  val navigate = remember { mutableStateOf<String>("") }
 
-    NavHost(modifier = modifier, navController = navController, startDestination = "item_list") {
-        composable("item_list") {
-            ItemListScreen(
-                viewModel = viewModel,
-                onNavigateToDetail = { selectedItem -> navigate.value = selectedItem },
-                navigate = navigate,
-                navController = navController
-            )
-        }
-        composable("item_detail/{itemId}") { backStackEntry ->
-            val itemId = backStackEntry.arguments?.getString("itemId")
-            ItemDetailScreen(itemId = itemId)
-        }
+  NavHost(modifier = modifier, navController = navController, startDestination = "item_list") {
+    composable("item_list") {
+      ItemListScreen(
+        viewModel = viewModel,
+        onNavigateToDetail = { selectedItem -> navigate.value = selectedItem },
+        navigate = navigate,
+        navController = navController
+      )
     }
+    composable("item_detail/{itemId}") { backStackEntry ->
+      val itemId = backStackEntry.arguments?.getString("itemId")
+      ItemDetailScreen(itemId = itemId)
+    }
+  }
 }
 
 @Composable
 fun ItemListScreen(
-    viewModel: JarViewModel,
-    onNavigateToDetail: (String) -> Unit,
-    navigate: MutableState<String>,
-    navController: NavHostController
+  viewModel: JarViewModel,
+  onNavigateToDetail: (String) -> Unit,
+  navigate: MutableState<String>,
+  navController: NavHostController
 ) {
-    val items = viewModel.listStringData.collectAsState()
+  val items = viewModel.filerListStringData.collectAsState()
 
-    if (navigate.value.isNotBlank()) {
-        val currRoute = navController.currentDestination?.route.orEmpty()
-        if (!currRoute.contains("item_detail")) {
-            navController.navigate("item_detail/${navigate.value}")
-        }
+  var query by remember {
+    mutableStateOf("")
+  }
+
+  LaunchedEffect(query) {
+    viewModel.getSearchResult(query)
+  }
+
+  if (navigate.value.isNotBlank()) {
+    val currRoute = navController.currentDestination?.route.orEmpty()
+    if (!currRoute.contains("item_detail")) {
+      navController.navigate("item_detail/${navigate.value}")
+      navigate.value = ""
     }
+  }
+  Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally)
+  {
+    TextField(shape = RoundedCornerShape(30.dp),
+      modifier = Modifier
+          .fillMaxWidth()
+          .wrapContentHeight()
+          .padding(5.dp),
+      value = query,
+      onValueChange = {
+        query = it
+      },
+      label = {
+        Text(text = "Search..")
+      }
+    )
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+      modifier = Modifier
+          .fillMaxSize()
+          .padding(16.dp)
     ) {
-        items(items.value) { item ->
-            ItemCard(
-                item = item,
-                onClick = { onNavigateToDetail(item.id) }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-        }
+      items(items.value) { item ->
+        ItemCard(
+          item = item,
+          onClick = { onNavigateToDetail(item.id) }
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+      }
     }
+  }
 }
 
 @Composable
 fun ItemCard(item: ComputerItem, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { onClick() }
-    ) {
-        Text(text = item.name, fontWeight = FontWeight.Bold, color = Color.Transparent)
-    }
+  Column(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp)
+        .clickable { onClick() }
+  ) {
+    Text(text = item.name, fontWeight = FontWeight.Bold)
+    item.data?.color?.let { Text(text = "Color: ${it}") }
+    item.data?.capacity?.let { Text(text = "Price: ${it}") }
+  }
 }
 
 @Composable
 fun ItemDetailScreen(itemId: String?) {
-    // Fetch the item details based on the itemId
-    // Here, you can fetch it from the ViewModel or repository
-    Text(
-        text = "Item Details for ID: $itemId",
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    )
+  // Fetch the item details based on the itemId
+  // Here, you can fetch it from the ViewModel or repository
+  Text(
+    text = "Item Details for ID: $itemId",
+    modifier = Modifier
+        .fillMaxSize()
+        .padding(16.dp)
+  )
 }

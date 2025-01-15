@@ -12,15 +12,35 @@ import kotlinx.coroutines.launch
 
 class JarViewModel : ViewModel() {
 
-    private val _listStringData = MutableStateFlow<List<ComputerItem>>(emptyList())
-    val listStringData: StateFlow<List<ComputerItem>>
-        get() = _listStringData
+  private val _filerListStringData = MutableStateFlow<List<ComputerItem>>(emptyList())
+  val filerListStringData: StateFlow<List<ComputerItem>>
+    get() = _filerListStringData
 
-    private val repository: JarRepository = JarRepositoryImpl(createRetrofit())
+  private var _listStringData = listOf<ComputerItem>()
 
-    fun fetchData() {
-        viewModelScope.launch {
-            repository.fetchResults()
-        }
+  private val repository: JarRepository = JarRepositoryImpl(createRetrofit())
+
+  fun fetchData() {
+    viewModelScope.launch {
+      val res = repository.fetchResults()
+      _filerListStringData.value = res
+      _listStringData = res
     }
+  }
+
+  fun getSearchResult(query: String) {
+    if (query.isEmpty()) {
+      _filerListStringData.value = _listStringData
+      return
+    }
+
+    val filteredData = filterData(query)
+    _filerListStringData.value = filteredData
+  }
+
+  fun filterData(query: String): List<ComputerItem> {
+    return _listStringData.filter {
+      it.name.contains(query)
+    }.toList()
+  }
 }

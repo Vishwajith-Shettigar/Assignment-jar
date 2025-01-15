@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 interface JarRepository {
-    suspend fun fetchResults(): Flow<List<ComputerItem>>
+    suspend fun fetchResults(): List<ComputerItem>
 }
 
 class JarRepositoryImpl(
     private val apiService: ApiService
 ) : JarRepository {
-    override suspend fun fetchResults(): Flow<List<ComputerItem>> = flow {
-        apiService.fetchResults()
+    override suspend fun fetchResults(): List<ComputerItem> {
+     return   apiService.fetchResults()
     }
 }
