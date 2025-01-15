@@ -22,9 +22,10 @@ class JarViewModel : ViewModel() {
 
   fun fetchData() {
     viewModelScope.launch {
-      val res = repository.fetchResults()
-      _filerListStringData.value = res
-      _listStringData = res
+    repository.fetchResults().collect {
+        _filerListStringData.value = it
+        _listStringData = it
+      }
     }
   }
 
