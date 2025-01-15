@@ -1,5 +1,6 @@
 package com.myjar.jarassignment.ui.vm
 
+import androidx.compose.ui.text.toLowerCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.myjar.jarassignment.createRetrofit
@@ -41,7 +42,7 @@ class JarViewModel : ViewModel() {
 
  private fun filterData(query: String): List<ComputerItem> {
     return _listStringData.filter {
-      it.name.contains(query)
+      it.name.lowercase().contains(query.lowercase())
     }.toList()
   }
 }
